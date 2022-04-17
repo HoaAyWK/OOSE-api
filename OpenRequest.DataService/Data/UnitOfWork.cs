@@ -15,6 +15,8 @@ public class UnitOfWork : IUnitOfWork, IDisposable
     public ICategoriesRepository Categories { get; private set; }
     public IPostsRepository Posts { get; private set; }
 
+    public IRefreshTokensRepository RefreshTokens { get; private set; }
+
     public UnitOfWork(AppDbContext context, ILoggerFactory loggerFactory)
     {
         _context = context;
@@ -25,6 +27,7 @@ public class UnitOfWork : IUnitOfWork, IDisposable
         Freelancers = new FreelancersRepository(_context, _logger);
         Categories = new CategoriesRepository(_context, _logger);
         Posts = new PostsRepository(_context, _logger);
+        RefreshTokens = new RefreshTokensRepository(_context, _logger);
     }
 
     public async Task CompleteAsync()

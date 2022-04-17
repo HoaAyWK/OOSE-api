@@ -23,5 +23,5 @@ public class UserRegistrationRequestDto
     public string Gender { get; set; } = null!;
 
     [Required]
-    public DateTime DateOfBirth { get; set; }
+    public string DateOfBirth { get; set; } = null!;
 }

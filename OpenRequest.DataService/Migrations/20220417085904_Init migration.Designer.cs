@@ -12,7 +12,7 @@ using OpenRequest.DataService.Data;
 namespace OpenRequest.DataService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20220417044520_Init migration")]
+    [Migration("20220417085904_Init migration")]
     partial class Initmigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
