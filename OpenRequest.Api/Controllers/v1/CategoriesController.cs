@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OpenRequest.Authentication.Models.DTO.Incoming;
+using OpenRequest.Configuration.Messages;
 using OpenRequest.DataService.IConfiguration;
 using OpenRequest.Entities.DbSets;
 using OpenRequest.Entities.DTO.Generic;
@@ -16,10 +17,10 @@ public class CategoriesController : BaseController
     public CategoriesController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, IMapper mapper)
         : base(unitOfWork, userManager, mapper)
     {
-
     }
 
     [HttpGet]
+    [Route("Categories")]
     public async Task<IActionResult> GetCategories()
     {
         var categories = await _unitOfWork.Categories.All();
@@ -31,7 +32,7 @@ public class CategoriesController : BaseController
     }
 
     [HttpGet]
-    [Route("GetCategory", Name = "GetCategory")]
+    [Route("Category", Name = "GetCategory")]
     public async Task<IActionResult> GetCategory(Guid id)
     {
         var category = await _unitOfWork.Categories.GetById(id);
@@ -39,7 +40,9 @@ public class CategoriesController : BaseController
 
         if (category == null)
         {
-            result.Error = PopulateError(404, "Not Found", "Not Found");
+            result.Error = PopulateError(404, 
+                ErrorMessages.Type.NotFound, 
+                ErrorMessages.Category.CategoryNotFound);
             return NotFound(result);
         }
 
@@ -63,12 +66,16 @@ public class CategoriesController : BaseController
                 return CreatedAtRoute("GetCategory", new { id = mappedCategory.Id });
             }
 
-            result.Error = PopulateError(400, "Bad Request", "Invalid payload.");
+            result.Error = PopulateError(400, 
+                ErrorMessages.Type.BadRequest, 
+                ErrorMessages.Generic.InvalidPayload);
             return BadRequest(result);
         }
         else 
         {
-            result.Error = PopulateError(400, "Bad Request", "Invalid payload.");
+            result.Error = PopulateError(400, 
+                ErrorMessages.Type.BadRequest, 
+                ErrorMessages.Generic.InvalidPayload);
             return BadRequest(result);
         }
     }
@@ -81,21 +88,26 @@ public class CategoriesController : BaseController
         if (ModelState.IsValid)
         {
             var mappedCategory = _mapper.Map<Category>(categoryDto);
-            var isUpdated = await _unitOfWork.Categories.Upsert(mappedCategory);
+            var isUpdated = await _unitOfWork.Categories.Upsert(id, mappedCategory);
 
             if (isUpdated)
             {
                 await _unitOfWork.CompleteAsync();
                 result.Content = categoryDto;
-                return CreatedAtAction("GetCategory", new { Id = id });
+                return CreatedAtAction("GetCategory", new { id = id, 
+                    name = categoryDto.Name, description = categoryDto.Description });
             }
             
-            result.Error = PopulateError(400, "Bad Request", "Invalid payload.");
+            result.Error = PopulateError(400, 
+                ErrorMessages.Type.BadRequest, 
+                ErrorMessages.Generic.InvalidPayload);
             return BadRequest(result);
         }
         else
         {
-            result.Error = PopulateError(400, "Bad Request", "Invalid payload.");
+            result.Error = PopulateError(400, 
+                ErrorMessages.Type.BadRequest, 
+                ErrorMessages.Generic.InvalidPayload);
             return BadRequest(result);
         }
     }
@@ -107,14 +119,16 @@ public class CategoriesController : BaseController
         var result = new Result<string>();
 
         var isDeleted = await _unitOfWork.Categories.Delete(id);
-
         if (!isDeleted)
         {
-            result.Error = PopulateError(400, "Bad Request", "Invalid payload.");
+            result.Error = PopulateError(400, 
+                ErrorMessages.Type.BadRequest, 
+                ErrorMessages.Generic.InvalidPayload);
             return BadRequest(result);
         }
 
-        result.Content = "Deleted successful.";
+        await _unitOfWork.CompleteAsync();
+        result.Content = ActionMessages.DeleteSuccess;
         return Ok(result);
     }
 }

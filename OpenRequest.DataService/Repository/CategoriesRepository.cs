@@ -14,11 +14,11 @@
 
         }
 
-        public override async Task<bool> Upsert(Category category)
+        public override async Task<bool> Upsert(Guid id, Category category)
         {
             try
             {
-                var existingCategory = await dbSet.Where(x => x.Id == category.Id)
+                var existingCategory = await dbSet.Where(x => x.Id == id)
                     .FirstOrDefaultAsync();
 
                 if (existingCategory == null)

@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\OpenRequest.DataService\OpenRequest.DataService.csproj" />
     <ProjectReference Include="..\OpenRequest.Authentication\OpenRequest.Authentication.csproj" />
+    <ProjectReference Include="..\OpenRequest.Configuration\OpenRequest.Configuration.csproj" />
   </ItemGroup>
 
 </Project>

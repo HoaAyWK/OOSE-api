@@ -38,7 +38,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
     }
 
 
-    public virtual Task<bool> Upsert(TEntity entity)
+    public virtual Task<bool> Upsert(Guid id, TEntity entity)
     {
         throw new NotImplementedException();
     }
