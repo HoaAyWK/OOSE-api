@@ -32,7 +32,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         return true;
     }
 
-    public virtual Task<bool> Delete(Guid id, string userId)
+    public virtual Task<bool> Delete(Guid id)
     {
         throw new NotImplementedException();
     }

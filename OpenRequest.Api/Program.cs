@@ -38,7 +38,8 @@ builder.Services.AddApiVersioning(options =>
     options.DefaultApiVersion = ApiVersion.Default;
 });
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddDefaultTokenProviders()
     .AddEntityFrameworkStores<AppDbContext>();
 
 builder.Services.AddAuthentication(options =>
@@ -52,7 +53,8 @@ builder.Services.AddAuthentication(options =>
     jwt.SaveToken = true;
     jwt.TokenValidationParameters = tokenValidationParameters;
 });
-    
+
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -60,6 +62,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+await CreateRoles(app);
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -74,3 +77,32 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+static async Task CreateRoles(IHost host)
+{
+    using (var scope = host.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+            string[] roleNames = { "Admin", "Freelancer", "Customer" };
+
+            foreach (var role in roleNames)
+            {
+                var roleExist = await roleManager.RoleExistsAsync(role);
+
+                if (!roleExist)
+                {
+                    await roleManager.CreateAsync(new IdentityRole(role));
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(e, "An error occurred getting required Service.");
+        }
+    }
+}

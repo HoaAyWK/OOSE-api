@@ -7,8 +7,5 @@ namespace OpenRequest.Entities.DbSets;
 public class Customer : User 
 {
     public string CompanyName { get; set; } = null!;
-    public string Role { get; set; } = null!;
-    public double Rate { get; set; }
-
     public List<Post>? Posts { get; set; }
 }

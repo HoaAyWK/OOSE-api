@@ -7,8 +7,5 @@ namespace OpenRequest.Entities.DbSets;
 public class Freelancer : User
 {
     public string JobTitle { get; set; } = null!;
-    public string Experience { get; set; } = null!;
-    public double Rated { get; set; }
-
     public List<Post>? Posts { get; set; }
 }

@@ -13,5 +13,5 @@ public interface IGenericRepository<TEntity> where TEntity : class
     // Update entity or add if it does not exist
     Task<bool> Upsert(TEntity entity);
 
-    Task<bool> Delete(Guid id, string userId);
+    Task<bool> Delete(Guid id);
 }

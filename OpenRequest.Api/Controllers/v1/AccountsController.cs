@@ -11,6 +11,7 @@ using OpenRequest.Authentication.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
+using AutoMapper;
 
 namespace OpenRequest.Api.Controllers.v1;
 
@@ -22,8 +23,9 @@ public class AccountsController : BaseController
     public AccountsController(IUnitOfWork unitOfWork, 
         UserManager<IdentityUser> userManager,
         IOptionsMonitor<JwtConfig> optionsMonitor,
-        TokenValidationParameters tokenValidationParameters) 
-        : base(unitOfWork, userManager)
+        TokenValidationParameters tokenValidationParameters,
+        IMapper mapper) 
+        : base(unitOfWork, userManager, mapper)
     {
         _jwtConfig = optionsMonitor.CurrentValue;
         _tokenValidationParameters = tokenValidationParameters;
@@ -97,6 +99,164 @@ public class AccountsController : BaseController
             });
         }
 
+    }
+
+    [HttpPost]
+    [Route("CustomerRegister")]
+    public async Task<IActionResult> CustomerRegister([FromBody] CustomerRegisrationDto customerRegisrationDto)
+    {
+        if (ModelState.IsValid) 
+        {
+            var userExist = await _userManger.FindByEmailAsync(customerRegisrationDto.Email);
+
+            if (userExist != null)
+            {
+                return BadRequest(new UserRegistrationResponseDto
+                {
+                    Success = false,
+                    Errors = new List<string>{ "Email already in use." }
+                });
+            }
+
+            var user = new IdentityUser()
+            {
+                Email = customerRegisrationDto.Email,
+                UserName = customerRegisrationDto.Email,
+                EmailConfirmed = true
+            };
+
+            var result = await _userManger.CreateAsync(user, customerRegisrationDto.Password);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(new UserRegistrationResponseDto
+                {
+                    Success = false,
+                    Errors = result.Errors.Select(e => e.Description).ToList()
+                });
+            }
+
+            var addedRole = await _userManger.AddToRoleAsync(user, "Customer");
+            if (!addedRole.Succeeded)
+            {
+                await _userManger.DeleteAsync(user);
+                return BadRequest(new UserRegistrationResponseDto
+                {
+                    Success = false,
+                    Errors = addedRole.Errors.Select(e => e.Description).ToList()
+                });
+            }
+
+            var customer = _mapper.Map<Customer>(customerRegisrationDto);
+            customer.IdentityId = new Guid(user.Id);
+
+            var addedCustomer = await _unitOfWork.Customers.Add(customer);
+            if (!addedCustomer)
+            {
+                await _userManger.DeleteAsync(user);
+                return BadRequest(new UserRegistrationResponseDto
+                {
+                    Success = false,
+                    Errors = new List<string>{ "Can not add customer." }
+                });
+            }
+            await _unitOfWork.CompleteAsync();
+
+            var token = await GenerateJwtToken(user);
+
+            return Ok(new AuthResult
+            {
+                Success = true,
+                Token = token.JwtToken,
+                RefreshToken = token.RefreshToken
+            });
+        }
+        else
+        {
+            return BadRequest(new AuthResult
+            {
+                Success = false,
+                Errors = new List<string>{ "Invalid payload." }
+            });
+        }
+    }
+
+    [HttpPost]
+    [Route("FreelancerRegister")]
+    public async Task<IActionResult> FreelancerRegister([FromBody] FreelancerRegistrationDto freelancerRegistrationDto)
+    {
+        if (ModelState.IsValid) 
+        {
+            var userExist = await _userManger.FindByEmailAsync(freelancerRegistrationDto.Email);
+
+            if (userExist != null)
+            {
+                return BadRequest(new UserRegistrationResponseDto
+                {
+                    Success = false,
+                    Errors = new List<string>{ "Email already in use." }
+                });
+            }
+
+            var user = new IdentityUser()
+            {
+                Email = freelancerRegistrationDto.Email,
+                UserName = freelancerRegistrationDto.Email,
+                EmailConfirmed = true
+            };
+
+            var result = await _userManger.CreateAsync(user, freelancerRegistrationDto.Password);     
+            if (!result.Succeeded)
+            {
+                return BadRequest(new UserRegistrationResponseDto
+                {
+                    Success = false,
+                    Errors = result.Errors.Select(e => e.Description).ToList()
+                });
+            }
+
+            var addedRole = await _userManger.AddToRoleAsync(user, "Freelancer");
+            if (!addedRole.Succeeded)
+            {
+                await _userManger.DeleteAsync(user);
+                return BadRequest(new UserRegistrationResponseDto
+                {
+                    Success = false,
+                    Errors = addedRole.Errors.Select(e => e.Description).ToList()
+                });
+            }
+
+            var freelancer = _mapper.Map<Freelancer>(freelancerRegistrationDto);
+            freelancer.IdentityId = new Guid(user.Id);
+
+            var addedFreelancer = await _unitOfWork.Freelancers.Add(freelancer);
+            if (!addedFreelancer)
+            {
+                await _userManger.DeleteAsync(user);
+                return BadRequest(new UserRegistrationResponseDto{
+                    Success = false,
+                    Errors = new List<string>{ "Can not add freelancer." }
+                });
+            }
+            await _unitOfWork.CompleteAsync();
+            
+            var token = await GenerateJwtToken(user);
+
+            return Ok(new AuthResult
+            {
+                Success = true,
+                Token = token.JwtToken,
+                RefreshToken = token.RefreshToken
+            });
+        }
+        else
+        {
+            return BadRequest(new AuthResult
+            {
+                Success = false,
+                Errors = new List<string>{ "Invalid payload." }
+            });
+        }
     }
 
 
