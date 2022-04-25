@@ -9,6 +9,7 @@ public interface IUnitOfWork
     IFreelancersRepository Freelancers { get; }
     ICategoriesRepository Categories { get; }
     IPostsRepository Posts { get; }
+    IPostCategoryRepository PostCategory { get; }
 
     IRefreshTokensRepository RefreshTokens { get; }
 

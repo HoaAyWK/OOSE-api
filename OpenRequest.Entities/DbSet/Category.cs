@@ -6,5 +6,5 @@ public class Category
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
 
-    public List<PostCategory> PostCategories { get; set; } = null!;
+    public List<PostCategory>? PostCategories { get; set; }
 }

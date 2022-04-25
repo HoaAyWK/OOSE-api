@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OpenRequest.Entities\OpenRequest.Entities.csproj" />
+    <ProjectReference Include="..\OpenRequest.Configuration\OpenRequest.Configuration.csproj" />
   </ItemGroup>
 
 </Project>

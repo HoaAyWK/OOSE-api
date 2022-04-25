@@ -12,10 +12,10 @@
 
             builder.HasOne(pc => pc.Post)
                 .WithMany(p => p.PostCategories)
-                .HasForeignKey(pc => pc.PostId);
+                .HasForeignKey(pc=> pc.PostId);
             
             builder.HasOne(pc => pc.Category)
-                .WithMany(pc => pc.PostCategories)
+                .WithMany(c => c.PostCategories)
                 .HasForeignKey(pc => pc.CategoryId);
         }
     }

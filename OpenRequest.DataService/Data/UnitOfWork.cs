@@ -14,6 +14,7 @@
         public IFreelancersRepository Freelancers { get; private set; }
         public ICategoriesRepository Categories { get; private set; }
         public IPostsRepository Posts { get; private set; }
+        public IPostCategoryRepository PostCategory { get; private set; }
 
         public IRefreshTokensRepository RefreshTokens { get; private set; }
 
@@ -28,6 +29,7 @@
             Categories = new CategoriesRepository(_context, _logger);
             Posts = new PostsRepository(_context, _logger);
             RefreshTokens = new RefreshTokensRepository(_context, _logger);
+            PostCategory = new PostCategoryRepository(_context, _logger);
         }
 
         public async Task CompleteAsync()

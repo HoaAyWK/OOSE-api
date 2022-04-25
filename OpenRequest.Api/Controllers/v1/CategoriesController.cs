@@ -42,7 +42,7 @@ public class CategoriesController : BaseController
         {
             result.Error = PopulateError(404, 
                 ErrorMessages.Type.NotFound, 
-                ErrorMessages.Category.CategoryNotFound);
+                ErrorMessages.Category.NotFound);
             return NotFound(result);
         }
 

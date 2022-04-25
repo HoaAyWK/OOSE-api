@@ -17,16 +17,22 @@ public static class ErrorMessages
 
     public static class Profile
     {
-        public static string UserNotFound = "User not found";
+        public static string NotFound = "User not found";
     }
 
     public static class Users
     {
-        public static string UserNotFound = "User not found";
+        public static string NotFound = "User not found";
     }
 
     public static class Category
     {
-        public static string CategoryNotFound = "Category not found";
+        public static string NotFound = "Category not found";
+    }
+
+    public static class Post
+    {
+        public static string NotFound = "Post not found";
+        public static string InvalidAction = "Post status is not open";
     }
 }

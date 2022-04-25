@@ -12,8 +12,8 @@ using OpenRequest.DataService.Data;
 namespace OpenRequest.DataService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20220424062119_Recreate database")]
-    partial class Recreatedatabase
+    [Migration("20220424130530_Init migration")]
+    partial class Initmigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -387,6 +387,7 @@ namespace OpenRequest.DataService.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("Rated")
@@ -395,7 +396,7 @@ namespace OpenRequest.DataService.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UpdatedDate")
+                    b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");

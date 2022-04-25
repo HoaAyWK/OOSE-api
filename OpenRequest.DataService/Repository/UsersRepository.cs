@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using OpenRequest.DataService.Data;
@@ -13,9 +14,19 @@ public class UsersRepository : GenericRepository<User>, IUsersRepository
 
     }
 
-    public Task<User> GetByIdentityId(Guid identityId)
+    public async Task<User> GetByIdentityId(Guid identityId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            return await dbSet.Where(x => x.IdentityId == identityId)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{Repo} GetByIdentityId method has generated an error", typeof(UsersRepository));
+            return null;
+        }
     }
 
     public Task<bool> UpdateUserProfile(User user)

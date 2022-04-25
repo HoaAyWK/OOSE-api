@@ -17,5 +17,6 @@ public class AppDbContext : IdentityDbContext
     public virtual DbSet<Freelancer> Freelancers { get; set; }
     public virtual DbSet<Customer> Customers { get; set; }
     public virtual DbSet<Post> Posts { get; set; }
+    public virtual DbSet<PostCategory> PostCategory { get; set; }
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 }
