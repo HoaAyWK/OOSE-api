@@ -11,9 +11,14 @@ public class UsersRepository : GenericRepository<User>, IUsersRepository
 {
     public UsersRepository(AppDbContext context, ILogger logger) : base(context, logger)
     {
-
     }
 
+    public override async Task<IEnumerable<User>> All()
+    {
+        return await dbSet.OrderBy(x => x.FirstName)
+            .AsNoTracking()
+            .ToListAsync();
+    }
     public async Task<User> GetByIdentityId(Guid identityId)
     {
         try

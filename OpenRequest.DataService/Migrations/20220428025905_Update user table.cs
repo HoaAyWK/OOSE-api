@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace OpenRequest.DataService.Migrations
 {
-    public partial class Initmigration : Migration
+    public partial class Updateusertable : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -247,7 +247,6 @@ namespace OpenRequest.DataService.Migrations
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Gender = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Rated = table.Column<double>(type: "float", nullable: false),
                     Discriminator = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: true),

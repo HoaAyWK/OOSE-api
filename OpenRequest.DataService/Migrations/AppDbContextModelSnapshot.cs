@@ -374,9 +374,6 @@ namespace OpenRequest.DataService.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Gender")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("IdentityId")
                         .HasColumnType("uniqueidentifier");
 

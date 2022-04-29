@@ -26,9 +26,6 @@ public class CustomerRegisrationDto
     public string Address { get; set; } = null!;
 
     [Required]
-    public string Gender { get; set; } = null!;
-
-    [Required]
     public string DateOfBirth { get; set; } = null!;
 
     [Required]

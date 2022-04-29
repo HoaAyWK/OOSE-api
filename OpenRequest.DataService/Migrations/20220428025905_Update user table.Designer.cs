@@ -12,8 +12,8 @@ using OpenRequest.DataService.Data;
 namespace OpenRequest.DataService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20220424130530_Init migration")]
-    partial class Initmigration
+    [Migration("20220428025905_Update user table")]
+    partial class Updateusertable
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -374,9 +374,6 @@ namespace OpenRequest.DataService.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Gender")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("IdentityId")
