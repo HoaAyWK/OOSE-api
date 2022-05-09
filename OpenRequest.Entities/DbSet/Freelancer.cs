@@ -6,6 +6,6 @@ namespace OpenRequest.Entities.DbSets;
 [EntityTypeConfiguration(typeof(FreelancerConfiguration))]
 public class Freelancer : User
 {
-    public string JobTitle { get; set; } = null!;
     public List<Post>? Posts { get; set; }
+    public List<PostRequest>? PostRequests { get; set; }
 }

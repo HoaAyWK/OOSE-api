@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace OpenRequest.Authentication.Models.DTO.Incoming;
+namespace OpenRequest.Entities.DbSets.Incoming;
 
-public class CustomerRegisrationDto
+public class UpdateUserInfoDto
 {
     [Required]
     public string FirstName { get; set; } = null!;
@@ -11,20 +11,14 @@ public class CustomerRegisrationDto
     public string LastName { get; set; } = null!;
 
     [Required]
-    public string Email { get; set; } = null!;
-    
-    [Required]
     public string Phone { get; set; } = null!;
 
     [Required]
-    public string Password { get; set; } = null!;
-
-    [Required]
-    public string Country { get; set; } = null!;
+    public string DateOfBirth { get; set; } = null!;
 
     [Required]
     public string Address { get; set; } = null!;
 
     [Required]
-    public string DateOfBirth { get; set; } = null!;
+    public string Country { get; set; } = null!;
 }

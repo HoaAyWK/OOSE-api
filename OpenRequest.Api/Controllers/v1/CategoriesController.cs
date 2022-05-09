@@ -11,7 +11,7 @@ using OpenRequest.Entities.DTO.Generic;
 
 namespace OpenRequest.Api.Controllers.v1;
 
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
 public class CategoriesController : BaseController
 {
     public CategoriesController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, IMapper mapper)
@@ -50,6 +50,26 @@ public class CategoriesController : BaseController
         return Ok(result);
     }
 
+    [HttpGet]
+    [Route("GetCategoryById")]
+    public async Task<IActionResult> GetCategoryById(Guid id)
+    {
+        var result = new Result<Category>();
+
+        var category = await _unitOfWork.Categories.GetCategoryById(id);
+        if (category == null) 
+        {
+            result.Error = PopulateError(404,
+                ErrorMessages.Type.NotFound,
+                ErrorMessages.Category.NotFound);
+            return BadRequest(result);
+        }
+
+        result.Content = category;
+        return Ok(result);
+    }
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost]
     [Route("AddCategory")]
     public async Task<IActionResult> AddCategory([FromBody] CategoryDto categoryDto)
@@ -63,7 +83,7 @@ public class CategoriesController : BaseController
             {
                 await _unitOfWork.CompleteAsync();
                 result.Content = categoryDto;
-                return CreatedAtRoute("GetCategory", new { id = mappedCategory.Id });
+                return Created("GetCategory", new { id = mappedCategory.Id });
             }
 
             result.Error = PopulateError(400, 
@@ -80,6 +100,7 @@ public class CategoriesController : BaseController
         }
     }
 
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPut]
     [Route("UpdateCategory")]
     public async Task<IActionResult> UpdateCategory(Guid id, [FromBody] CategoryDto categoryDto)
@@ -112,6 +133,7 @@ public class CategoriesController : BaseController
         }
     }
 
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpDelete]
     [Route("DeleteCategory")]
     public async Task<IActionResult> DeleteCategory(Guid id)

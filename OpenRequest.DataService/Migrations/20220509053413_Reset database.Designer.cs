@@ -12,8 +12,8 @@ using OpenRequest.DataService.Data;
 namespace OpenRequest.DataService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20220428025905_Update user table")]
-    partial class Updateusertable
+    [Migration("20220509053413_Reset database")]
+    partial class Resetdatabase
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -222,6 +222,38 @@ namespace OpenRequest.DataService.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("OpenRequest.Entities.DbSets.Assignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FilePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId")
+                        .IsUnique();
+
+                    b.ToTable("Assignment");
+                });
+
             modelBuilder.Entity("OpenRequest.Entities.DbSets.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -229,6 +261,9 @@ namespace OpenRequest.DataService.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FeaturedImage")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
@@ -259,15 +294,14 @@ namespace OpenRequest.DataService.Migrations
                     b.Property<double>("Duration")
                         .HasColumnType("float");
 
+                    b.Property<string>("FeaturedImage")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid?>("FreelancerId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<double>("Price")
                         .HasColumnType("float");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -285,9 +319,6 @@ namespace OpenRequest.DataService.Migrations
 
                     b.HasIndex("FreelancerId");
 
-                    b.HasIndex("Slug")
-                        .IsUnique();
-
                     b.ToTable("Posts");
                 });
 
@@ -304,6 +335,24 @@ namespace OpenRequest.DataService.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("PostCategory");
+                });
+
+            modelBuilder.Entity("OpenRequest.Entities.DbSets.PostRequest", b =>
+                {
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FreelancerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("PostId", "FreelancerId");
+
+                    b.HasIndex("FreelancerId");
+
+                    b.ToTable("PostRequests");
                 });
 
             modelBuilder.Entity("OpenRequest.Entities.DbSets.RefreshToken", b =>
@@ -361,7 +410,7 @@ namespace OpenRequest.DataService.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("DateOfBirth")
+                    b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Discriminator")
@@ -370,6 +419,12 @@ namespace OpenRequest.DataService.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FeaturedAvatar")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FeaturedBackground")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FirstName")
@@ -407,25 +462,12 @@ namespace OpenRequest.DataService.Migrations
                 {
                     b.HasBaseType("OpenRequest.Entities.DbSets.User");
 
-                    b.Property<string>("CompanyName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasDiscriminator().HasValue("Customer");
                 });
 
             modelBuilder.Entity("OpenRequest.Entities.DbSets.Freelancer", b =>
                 {
                     b.HasBaseType("OpenRequest.Entities.DbSets.User");
-
-                    b.Property<string>("JobTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("PostId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasIndex("PostId");
 
                     b.HasDiscriminator().HasValue("Freelancer");
                 });
@@ -481,6 +523,17 @@ namespace OpenRequest.DataService.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("OpenRequest.Entities.DbSets.Assignment", b =>
+                {
+                    b.HasOne("OpenRequest.Entities.DbSets.Post", "Post")
+                        .WithOne("Assignment")
+                        .HasForeignKey("OpenRequest.Entities.DbSets.Assignment", "PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
             modelBuilder.Entity("OpenRequest.Entities.DbSets.Post", b =>
                 {
                     b.HasOne("OpenRequest.Entities.DbSets.Customer", "Author")
@@ -518,6 +571,25 @@ namespace OpenRequest.DataService.Migrations
                     b.Navigation("Post");
                 });
 
+            modelBuilder.Entity("OpenRequest.Entities.DbSets.PostRequest", b =>
+                {
+                    b.HasOne("OpenRequest.Entities.DbSets.Freelancer", "Freelancer")
+                        .WithMany("PostRequests")
+                        .HasForeignKey("FreelancerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OpenRequest.Entities.DbSets.Post", "Post")
+                        .WithMany("PostRequests")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Freelancer");
+
+                    b.Navigation("Post");
+                });
+
             modelBuilder.Entity("OpenRequest.Entities.DbSets.RefreshToken", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
@@ -529,13 +601,6 @@ namespace OpenRequest.DataService.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("OpenRequest.Entities.DbSets.Freelancer", b =>
-                {
-                    b.HasOne("OpenRequest.Entities.DbSets.Post", null)
-                        .WithMany("Freelancers")
-                        .HasForeignKey("PostId");
-                });
-
             modelBuilder.Entity("OpenRequest.Entities.DbSets.Category", b =>
                 {
                     b.Navigation("PostCategories");
@@ -543,9 +608,11 @@ namespace OpenRequest.DataService.Migrations
 
             modelBuilder.Entity("OpenRequest.Entities.DbSets.Post", b =>
                 {
-                    b.Navigation("Freelancers");
+                    b.Navigation("Assignment");
 
                     b.Navigation("PostCategories");
+
+                    b.Navigation("PostRequests");
                 });
 
             modelBuilder.Entity("OpenRequest.Entities.DbSets.Customer", b =>
@@ -555,6 +622,8 @@ namespace OpenRequest.DataService.Migrations
 
             modelBuilder.Entity("OpenRequest.Entities.DbSets.Freelancer", b =>
                 {
+                    b.Navigation("PostRequests");
+
                     b.Navigation("Posts");
                 });
 #pragma warning restore 612, 618

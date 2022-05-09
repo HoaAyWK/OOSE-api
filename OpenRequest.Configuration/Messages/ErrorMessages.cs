@@ -23,6 +23,7 @@ public static class ErrorMessages
     public static class Users
     {
         public static string NotFound = "User not found";
+        public static string UnableToProcess = "Unable to process";
     }
 
     public static class Category
@@ -34,5 +35,17 @@ public static class ErrorMessages
     {
         public static string NotFound = "Post not found";
         public static string InvalidAction = "Post status is not open";
+        public static string ErrorWhenSelect = "Can not select post";
+        public static string UnableToProcess = "Unable to process";
+    }
+
+    public static class PostRequest
+    {
+        public static string CannotDelete = "Can not delete";
+    }
+
+    public static class Assignment
+    {
+        public static string UnableToProcess = "Unable to process";
     }
 }

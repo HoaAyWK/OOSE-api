@@ -19,4 +19,5 @@ public class AppDbContext : IdentityDbContext
     public virtual DbSet<Post> Posts { get; set; }
     public virtual DbSet<PostCategory> PostCategory { get; set; }
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
+    public virtual DbSet<PostRequest> PostRequests { get; set; }
 }

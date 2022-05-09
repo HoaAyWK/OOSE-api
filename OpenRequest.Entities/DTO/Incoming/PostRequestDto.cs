@@ -10,8 +10,7 @@ public class PostRequestDto
     [Required]
     public string Description { get; set; } = null!;
 
-    [Required]
-    public string Slug { get; set; } = null!;
+    public string FeaturedImage { get; set; } = null!;
 
     [Required]
     public double Price { get; set; }

@@ -16,6 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var jwtConfig = builder.Configuration.GetSection("JwtConfig");
 var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtConfig:Secret"]);
+var adminEmail = builder.Configuration["Admin:Email"];
+var adminPassword = builder.Configuration["Admin:Password"];
 
 var tokenValidationParameters = new TokenValidationParameters
 {
@@ -96,7 +98,7 @@ app.MapControllers();
 app.Run();
 
 
-static async Task CreateRoles(IHost host)
+async Task CreateRoles(IHost host)
 {
     using (var scope = host.Services.CreateScope())
     {
@@ -104,6 +106,7 @@ static async Task CreateRoles(IHost host)
         try
         {
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+            var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
             string[] roleNames = { "Admin", "Freelancer", "Customer" };
 
             foreach (var role in roleNames)
@@ -115,6 +118,24 @@ static async Task CreateRoles(IHost host)
                     await roleManager.CreateAsync(new IdentityRole(role));
                 }
             }
+
+            var existedUser = await userManager.FindByEmailAsync(adminEmail);
+            if (existedUser == null) 
+            {
+                var admin = new IdentityUser() 
+                {
+                    Email = adminEmail,
+                    UserName = adminEmail,
+                    EmailConfirmed = true
+                };
+                
+                var createAdmin = await userManager.CreateAsync(admin, adminPassword);
+                if (createAdmin.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(admin, "Admin");
+                }
+            }
+
         }
         catch (Exception e)
         {

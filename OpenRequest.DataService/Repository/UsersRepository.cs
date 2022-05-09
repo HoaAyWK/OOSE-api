@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using OpenRequest.DataService.Data;
 using OpenRequest.DataService.IRepository;
 using OpenRequest.Entities.DbSets;
+using OpenRequest.Entities.DbSets.Incoming;
 
 namespace OpenRequest.DataService.Repository;
 
@@ -37,5 +38,47 @@ public class UsersRepository : GenericRepository<User>, IUsersRepository
     public Task<bool> UpdateUserProfile(User user)
     {
         throw new NotImplementedException();
+    }
+
+    public async Task<bool> UpdateAvatar(Guid id, string filePath)
+    {
+        var user = await dbSet.Where(u => u.Id == id)
+            .FirstOrDefaultAsync();
+        if (user == null) 
+        {
+            return false;
+        }
+        user.FeaturedAvatar = filePath;
+        return true;
+    }
+
+    public async Task<bool> UpdateBackground(Guid id, string filePath)
+    {
+        var user = await dbSet.Where(u => u.Id == id)
+            .FirstOrDefaultAsync();
+        if (user == null) 
+        {
+            return false;
+        }
+        user.FeaturedBackground = filePath;
+        return true;
+    }
+
+    public async Task<bool> UpdateUserInfo(Guid userId, UpdateUserInfoDto updateUserInfoDto)
+    {
+        var user = await dbSet.Where(u => u.Id == userId)
+            .FirstOrDefaultAsync();
+        if (user == null)
+        {
+            return false;
+        }
+        
+        user.FirstName = updateUserInfoDto.FirstName;
+        user.LastName = updateUserInfoDto.LastName;
+        user.Phone = updateUserInfoDto.LastName;
+        user.DateOfBirth = Convert.ToDateTime(updateUserInfoDto.DateOfBirth);
+        user.Address = updateUserInfoDto.Address;
+        user.Country = updateUserInfoDto.Country;
+        return true;
     }
 }

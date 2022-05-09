@@ -12,7 +12,7 @@ using OpenRequest.Entities.DTO.Incoming;
 
 namespace OpenRequest.Api.Controllers.v1;
 
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
 public class PostsController : BaseController
 {
     public PostsController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager,
@@ -33,6 +33,19 @@ public class PostsController : BaseController
     }
 
     [HttpGet]
+    [Route("AllActivePosts")]
+    public async Task<IActionResult> GetActivePosts()
+    {
+        var result = new PagedResult<Post>();
+        var activePosts = await _unitOfWork.Posts.GetActivePosts();
+
+        result.Content = activePosts.ToList();
+        result.ResultCount = activePosts.Count();
+
+        return Ok(result);
+    }
+
+    [HttpGet]
     [Route("GetPost", Name = "GetPost")]
     public async Task<IActionResult> GetPost(Guid id)
     {
@@ -44,13 +57,38 @@ public class PostsController : BaseController
             result.Error = PopulateError(404,
                 ErrorMessages.Type.NotFound,
                 ErrorMessages.Post.NotFound);
-            return NotFound(result);
+            return BadRequest(result);
         }
 
         result.Content = post;
         return Ok(result);
     }
 
+    [HttpGet]
+    [Route("GetHighestPricePosts")]
+    public async Task<IActionResult> GetHighestPricePosts(int number)
+    {
+        var result = new PagedResult<Post>();
+        var posts = await _unitOfWork.Posts.GetHighestPricePosts(number);
+        result.Content = posts.ToList();
+        result.ResultCount = posts.Count();
+
+        return Ok(result);
+    }
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpGet]
+    [Route("GetPostRequestsByPostId")]
+    public async Task<IActionResult> GetPostRequestsByPostId(Guid postId)
+    {
+        var result = new PagedResult<PostRequest>();
+        var postRequests = await _unitOfWork.PostRequests.GetPostRequestsByPostId(postId);
+        result.Content = postRequests.ToList();
+        result.ResultCount = postRequests.Count();
+        return Ok(result);
+    }
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpGet]
     [Route("GetCustomerPosts")]
     public async Task<IActionResult> GetCustomerPosts()
@@ -85,6 +123,19 @@ public class PostsController : BaseController
     }
     
     [HttpGet]
+    [Route("GetActivePostsByCustomer")]
+    public async Task<IActionResult> GetActivePostsByCustomer(Guid id)
+    {
+        var result = new PagedResult<Post>();
+        var posts = await _unitOfWork.Posts.GetCustomerActivePosts(id);
+        result.Content = posts.ToList();
+        result.ResultCount = posts.Count();
+
+        return Ok(result);
+    }
+
+
+    [HttpGet]
     [Route("GetPostsByCategory")]
     public async Task<IActionResult> GetPostsByCategory(Guid id)
     {
@@ -94,6 +145,118 @@ public class PostsController : BaseController
         return Ok(result);
     }
 
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpPost]
+    [Route("SelectPost")]
+    public async Task<IActionResult> SelectPost(Guid id)
+    {
+        var result = new Result<string>();
+        var loggedInUser = await _userManger.GetUserAsync(HttpContext.User);
+        if (loggedInUser == null)
+        {
+            result.Error = PopulateError(400,
+                ErrorMessages.Type.BadRequest,
+                ErrorMessages.Users.NotFound
+            );
+            return BadRequest(result);
+        }
+
+        var identityId = new Guid(loggedInUser.Id);
+        var freelancer = await _unitOfWork.Users.GetByIdentityId(identityId);
+        if (freelancer == null)
+        {
+            result.Error = PopulateError(400,
+                ErrorMessages.Type.BadRequest,
+                ErrorMessages.Users.NotFound
+            );
+            return BadRequest(result);
+        }
+        var postRequest = new PostRequest { PostId = id, FreelancerId = freelancer.Id, Status = 0 };
+        var added = await _unitOfWork.PostRequests.Add(postRequest);
+        if (!added)
+        {
+            result.Error = PopulateError(400,
+                ErrorMessages.Type.BadRequest,
+                ErrorMessages.Post.ErrorWhenSelect
+            );
+            return BadRequest(result);
+        }
+        await _unitOfWork.CompleteAsync();
+        result.Content = "Selected";
+        return Ok(result);
+    }
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpDelete]
+    [Route("UnSelectPost")]
+    public async Task<IActionResult> UnSelectPost(Guid postId, Guid freelancerId)
+    {
+        var result = new Result<string>();
+        var deleted = await _unitOfWork.PostRequests.Delete(postId, freelancerId);
+        if (deleted)
+        {
+            await _unitOfWork.CompleteAsync();
+            result.Content = "Deleted";
+            return Ok(result);
+        }
+        result.Error = PopulateError(400,
+            ErrorMessages.Type.UnableToProcess,
+            ErrorMessages.PostRequest.CannotDelete
+        );
+        return BadRequest(result);
+    }
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpPut]
+    [Route("FinishPost")]
+    public async Task<IActionResult> FinishPost([FromBody] FinishAssignmentDto finishAssignmentDto) 
+    {
+        var result = new Result<string>();
+        Guid postId = new Guid(finishAssignmentDto.PostId);
+        var post = await _unitOfWork.Posts.GetById(postId);
+        if (post == null) 
+        {
+            result.Error = PopulateError(400,
+                ErrorMessages.Type.BadRequest,
+                ErrorMessages.Post.NotFound
+            );
+            return BadRequest(result);
+        }
+        if (post.Assignment == null) 
+        {
+            result.Error = PopulateError(400,
+                ErrorMessages.Type.BadRequest,
+                ErrorMessages.Post.NotFound
+            );
+            return BadRequest(result);
+        }
+
+        var finishedAssignment = await _unitOfWork.Assignments.Submit(post.Assignment.Id, finishAssignmentDto.FilePath);
+        if (finishedAssignment) 
+        {
+            var closedPost = await _unitOfWork.Posts.Close(postId);
+            if (!closedPost)
+            {
+                result.Error = PopulateError(400,
+                    ErrorMessages.Type.BadRequest,
+                    ErrorMessages.Post.UnableToProcess
+                );
+            }
+
+            await _unitOfWork.CompleteAsync();
+            result.Content = "Finished post";
+            return Ok(result); 
+        }
+
+        result.Error = PopulateError(400,
+            ErrorMessages.Type.BadRequest,
+            ErrorMessages.Assignment.UnableToProcess
+        );
+        return BadRequest(result);
+    }
+
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost]
     [Route("CreatePost")]
     public async Task<IActionResult> CreatePost([FromBody] PostRequestDto postRequestDto)
@@ -157,6 +320,7 @@ public class PostsController : BaseController
         }
     }
 
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPut]
     [Route("UpdatePost")]
     public async Task<IActionResult> UpdatePost(Guid id, PostRequestDto postRequestDto)
@@ -217,6 +381,7 @@ public class PostsController : BaseController
         }
     }
 
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPut]
     [Route("ClosePost")]
     public async Task<IActionResult> ClosePost(Guid id)
@@ -240,10 +405,11 @@ public class PostsController : BaseController
         }
     }
 
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPut]
     [Route("ProcessPost")]
     // Update the Post status from Open to Processing.
-    public async Task<IActionResult> ProcessPost(Guid id)
+    public async Task<IActionResult> ProcessPost(Guid id, Guid freelancerId)
     {
         var result = new Result<string>();
         var postStatus = await _unitOfWork.Posts.GetStatus(id);
@@ -255,10 +421,26 @@ public class PostsController : BaseController
                 ErrorMessages.Post.InvalidAction);
             return BadRequest(result);
         }
-        var processPost = await _unitOfWork.Posts.Process(id);
+        var post = await _unitOfWork.Posts.GetById(id);
+        var processPost = await _unitOfWork.Posts.Process(id, freelancerId);
         
         if (processPost)
         {
+            DateTime endDate = DateTime.UtcNow.AddDays(post.Duration);
+            var assignment = new Assignment
+            {
+                EndDate = endDate,
+                PostId = id
+            };
+            var createdAssigment = await _unitOfWork.Assignments.Add(assignment);
+            if (!createdAssigment)
+            {
+                result.Error = PopulateError(400,
+                    ErrorMessages.Type.BadRequest,
+                    ErrorMessages.Assignment.UnableToProcess
+                );
+                return BadRequest(result);
+            }
             await _unitOfWork.CompleteAsync();
             result.Content = ActionMessages.UpdateSuccess;
             return Ok(result); 

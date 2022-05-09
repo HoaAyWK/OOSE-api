@@ -41,7 +41,7 @@ public class PostCategoryRepository : GenericRepository<PostCategory>, IPostCate
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "{Repo} Delete method error.", typeof(CategoriesRepository));
+            _logger.LogError(e, "{Repo} Delete method error.", typeof(PostCategoryRepository));
             return false;
         }
     }

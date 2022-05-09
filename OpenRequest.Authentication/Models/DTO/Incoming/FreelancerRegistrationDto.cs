@@ -27,7 +27,4 @@ public class FreelancerRegistrationDto
 
     [Required]
     public string DateOfBirth { get; set; } = null!;
-
-    [Required]
-    public string JobTitle { get; set; } = null!;
 }

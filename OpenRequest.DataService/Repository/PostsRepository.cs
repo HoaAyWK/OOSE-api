@@ -24,6 +24,55 @@ public class PostsRepository : GenericRepository<Post>, IPostsRepository
         
         return posts;
     }
+
+    public override async Task<Post> GetById(Guid id)
+    {
+        var post = await dbSet.Include(p => p.Author)
+            .Where(p => p.Id == id)
+            .Include(p => p.PostRequests)
+                .ThenInclude(pr => pr.Freelancer)
+            .Include(p => p.PostCategories)
+                .ThenInclude(pc => pc.Category)
+            .Include(p => p.Assignment)
+            .AsNoTracking()
+            .FirstOrDefaultAsync();
+        return post;
+    }
+
+    public async Task<IEnumerable<Post>> GetActivePosts() 
+    {
+        var posts = await dbSet.Where(p => p.Status == PostStatus.Open || p.Status == PostStatus.Processing)
+            .Include(p => p.Author)
+            .OrderByDescending(p => p.CreatedDate)
+            .AsNoTracking()
+            .ToListAsync();
+        return posts;
+    }
+
+    public async Task<IEnumerable<Post>> GetCustomerActivePosts(Guid customerId)
+    {
+        var posts = await dbSet.Where(p => p.Status == PostStatus.Open && p.AuthorId == customerId)
+            .OrderByDescending(p => p.CreatedDate)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return posts;
+    } 
+
+    public async Task<IEnumerable<Post>> GetHighestPricePosts(int number)
+    {
+        var highestPricePosts = await dbSet.Where(p => p.Status == PostStatus.Open)
+            .Include(p => p.PostCategories)
+                .ThenInclude(pc => pc.Category)
+            .Include(p => p.Author)
+            .OrderByDescending(p => p.Price)
+            .AsNoTracking()
+            .Take(number)
+            .ToListAsync();
+        
+        return highestPricePosts;
+    }
+    
     public override async Task<bool> Upsert(Guid id, Post post)
     {
         try
@@ -40,7 +89,7 @@ public class PostsRepository : GenericRepository<Post>, IPostsRepository
                 existingPost.Description = post.Description;
                 existingPost.Status = post.Status;
                 existingPost.UpdatedDate = DateTime.UtcNow;
-                existingPost.Slug = post.Slug;
+                existingPost.FeaturedImage = post.FeaturedImage;
                 existingPost.Price = post.Price;
                 existingPost.Duration = post.Duration;                
                 return true;
@@ -77,6 +126,7 @@ public class PostsRepository : GenericRepository<Post>, IPostsRepository
     public async Task<IEnumerable<Post>> GetCustomerPosts(Guid customerId)
     {
         return await dbSet.Where(p => p.AuthorId == customerId)
+            .Include(p => p.Author)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -90,12 +140,13 @@ public class PostsRepository : GenericRepository<Post>, IPostsRepository
         return true;
     }
 
-    public async Task<bool> Process(Guid id)
+    public async Task<bool> Process(Guid id, Guid freelancerId)
     {
         var existingPost = await dbSet.Where(p => p.Id == id)
             .FirstOrDefaultAsync();
         if (existingPost == null) return false;
         existingPost.Status = PostStatus.Processing;
+        existingPost.FreelancerId = freelancerId;
         return true;
     }
 
@@ -118,9 +169,11 @@ public class PostsRepository : GenericRepository<Post>, IPostsRepository
                 Post = post,
                 CategoryId = pc.CategoryId
             })
-            .Where(p => p.CategoryId == id)
+            .Where(p => p.CategoryId == id && p.Post.Status == PostStatus.Open)
             .Select(p => p.Post)
             .Distinct()
+            .Include(p => p.Author)
+            .AsNoTracking()
             .ToListAsync();
         
         return result;

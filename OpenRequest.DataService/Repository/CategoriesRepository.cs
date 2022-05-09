@@ -14,6 +14,15 @@
 
         }
 
+        public async Task<Category> GetCategoryById(Guid id)
+        {
+            var category = await dbSet.Where(c => c.Id == id)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+            
+            return category;
+        }
+
         public override async Task<bool> Upsert(Guid id, Category category)
         {
             try

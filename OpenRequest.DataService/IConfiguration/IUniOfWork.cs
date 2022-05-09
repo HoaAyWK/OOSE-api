@@ -10,6 +10,8 @@ public interface IUnitOfWork
     ICategoriesRepository Categories { get; }
     IPostsRepository Posts { get; }
     IPostCategoryRepository PostCategory { get; }
+    IPostRequestRepository PostRequests { get; }
+    IAssignmentsRepository Assignments { get; }
 
     IRefreshTokensRepository RefreshTokens { get; }
 

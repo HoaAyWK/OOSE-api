@@ -8,6 +8,10 @@ public class FreelancerProfile : Profile
 {
     public FreelancerProfile()
     {
-        CreateMap<FreelancerRegistrationDto, Freelancer>();
+        CreateMap<FreelancerRegistrationDto, Freelancer>()
+        .ForMember(
+                dest => dest.DateOfBirth,
+                opt => opt.MapFrom(src => Convert.ToDateTime(src.DateOfBirth))
+        );;
     }
 }

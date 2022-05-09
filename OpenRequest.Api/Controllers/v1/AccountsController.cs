@@ -94,11 +94,22 @@ public class AccountsController : BaseController
 
             var token = await GenerateJwtToken(user);
 
-            return Ok(new AuthResult
+            return Ok(new UserRegistrationResponseDto
             {
                 Success = true,
                 Token = token.JwtToken,
-                RefreshToken = token.RefreshToken
+                RefreshToken = token.RefreshToken,
+                UserId = customer.Id.ToString(),
+                UserAvatar = customer.FeaturedAvatar,
+                Roles = new List<string>{ "Customer" },
+                FirstName = customer.FirstName,
+                LastName = customer.LastName,
+                Phone = customer.Phone,
+                Email = customer.Email,
+                Address = customer.Address,
+                Country = customer.Country,
+                DateOfBirth = customer.DateOfBirth.ToString("MM/dd/yyyy"),
+                CreatedDate = customer.CreatedDate.ToString("MM/dd/yyyy"),
             });
         }
         else
@@ -172,11 +183,22 @@ public class AccountsController : BaseController
             
             var token = await GenerateJwtToken(user);
 
-            return Ok(new AuthResult
+            return Ok(new UserRegistrationResponseDto
             {
                 Success = true,
                 Token = token.JwtToken,
-                RefreshToken = token.RefreshToken
+                RefreshToken = token.RefreshToken,
+                UserId = freelancer.Id.ToString(),
+                UserAvatar = freelancer.FeaturedAvatar,
+                Roles = new List<string>{ "Freelancer" },
+                FirstName = freelancer.FirstName,
+                LastName = freelancer.LastName,
+                Phone = freelancer.Phone,
+                Email = freelancer.Email,
+                Address = freelancer.Address,
+                Country = freelancer.Country,
+                DateOfBirth = freelancer.DateOfBirth.ToString("MM/dd/yyyy"),
+                CreatedDate = freelancer.CreatedDate.ToString("MM/dd/yyyy"),
             });
         }
         else
@@ -211,13 +233,58 @@ public class AccountsController : BaseController
 
             if (validPassword)
             {
+                var IdentityId = new Guid(userExist.Id);
+                var user = await _unitOfWork.Users.GetByIdentityId(IdentityId);
+                var roles = await _userManger.GetRolesAsync(userExist);
+                if (user == null) 
+                {
+                    if (roles.Contains("Admin")) 
+                    {
+                        var orUser = new Admin()
+                        {
+                            Email = userExist.Email,
+                            FirstName = "Admin",
+                            LastName = "Admin",
+                            Phone="99999999999",
+                            DateOfBirth = DateTime.UtcNow,
+                            IdentityId = IdentityId,
+                        };
+
+                        var addedAdmin = await _unitOfWork.Users.Add(orUser);
+                        if (addedAdmin)
+                        {
+                            await _unitOfWork.CompleteAsync();
+                            user = orUser;
+                        }
+                    }
+                    else 
+                    {
+                        return BadRequest(new UserLoginResponseDto
+                        {
+                            Success = false,
+                            Errors = new List<string>{ "Invalid authentication request." }
+                        });
+                    }
+                }
                 var token = await GenerateJwtToken(userExist);
 
+                
                 return Ok(new UserLoginResponseDto
                 {
                     Success = true,
                     Token = token.JwtToken,
-                    RefreshToken = token.RefreshToken
+                    RefreshToken = token.RefreshToken,
+                    UserId = user.Id.ToString(),
+                    Roles = roles.ToList(),
+                    UserAvatar = user.FeaturedAvatar,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Phone = user.Phone,
+                    Email = user.Email,
+                    Address = user.Address,
+                    Country = user.Country,
+                    DateOfBirth = user.DateOfBirth.ToString("MM/dd/yyyy"),
+                    CreatedDate = user.CreatedDate.ToString("MM/dd/yyyy"),
                 });
             }
             else
@@ -329,12 +396,14 @@ public class AccountsController : BaseController
 
         try
         {
+            _tokenValidationParameters.ValidateLifetime = false;
             var principal = tokenHandler.ValidateToken(tokenRequestDto.Token,
-                _tokenValidationParameters, out var validatedToken);            
+                _tokenValidationParameters, out var validatedToken); 
+            _tokenValidationParameters.ValidateLifetime = true;           
             if (validatedToken is JwtSecurityToken jwtSecurityToken)
             {
                 var result = jwtSecurityToken.Header.Alg
-                    .Equals(SecurityAlgorithms.HmacSha256, StringComparison.CurrentCultureIgnoreCase);
+                    .Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
                 
                 if (!result)
                 {

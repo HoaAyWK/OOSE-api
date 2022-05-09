@@ -9,4 +9,6 @@ public class CategoryDto
     
     [Required]
     public string Description { get; set; } = null!;
+
+    public string? FeaturedImage { get; set; }
 }
