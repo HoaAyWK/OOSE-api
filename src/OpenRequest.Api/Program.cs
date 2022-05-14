@@ -19,6 +19,14 @@ var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtConfig:Secret"]);
 var adminEmail = builder.Configuration["Admin:Email"];
 var adminPassword = builder.Configuration["Admin:Password"];
 
+var configurationBuilder = new ConfigurationBuilder()
+    .SetBasePath(builder.Environment.ContentRootPath)
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
+
+builder.Configuration.AddConfiguration(configurationBuilder.Build());
+
 var tokenValidationParameters = new TokenValidationParameters
 {
     ValidateIssuerSigningKey = true,
@@ -31,8 +39,46 @@ var tokenValidationParameters = new TokenValidationParameters
 
 builder.Services.Configure<JwtConfig>(jwtConfig);
 // Add services to the container.
+// builder.Services.AddDbContext<AppDbContext>(options => 
+//     options.UseSqlServer(connectionString));
+
+var defaultConnectionString = string.Empty;
+
+if (builder.Environment.EnvironmentName == "Development") {
+    defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+}
+else
+{
+    // Use connection string provided at runtime by Heroku.
+    var connectionUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+    connectionUrl = connectionUrl.Replace("postgres://", string.Empty);
+    var userPassSide = connectionUrl.Split("@")[0];
+    var hostSide = connectionUrl.Split("@")[1];
+
+    var user = userPassSide.Split(":")[0];
+    var password = userPassSide.Split(":")[1];
+    var host = hostSide.Split("/")[0];
+    var database = hostSide.Split("/")[1].Split("?")[0];
+
+    defaultConnectionString = $"Host={host};Database={database};Username={user};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+}
+
+
 builder.Services.AddDbContext<AppDbContext>(options => 
-    options.UseSqlServer(connectionString));
+{
+    options.UseNpgsql(connectionString);
+});
+
+var serviceProvider = builder.Services.BuildServiceProvider();
+try
+{
+    var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+}
+catch
+{
+}
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton(tokenValidationParameters);
