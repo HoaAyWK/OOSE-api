@@ -11,10 +11,6 @@ public class UserProfile : Profile
     {
         CreateMap<User, UserResponseDto>()
             .ForMember(
-                dest => dest.DateOfBirth,
-                opt => opt.MapFrom(src => src.DateOfBirth.ToString("MM/dd/yyyy"))
-            )
-            .ForMember(
                 dest => dest.CreatedDate,
                 opt => opt.MapFrom(src => src.CreatedDate.ToString("MM/dd/yyyy"))
             );

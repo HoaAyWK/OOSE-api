@@ -108,7 +108,6 @@ public class AccountsController : BaseController
                 Email = customer.Email,
                 Address = customer.Address,
                 Country = customer.Country,
-                DateOfBirth = customer.DateOfBirth.ToString("MM/dd/yyyy"),
                 CreatedDate = customer.CreatedDate.ToString("MM/dd/yyyy"),
             });
         }
@@ -197,7 +196,6 @@ public class AccountsController : BaseController
                 Email = freelancer.Email,
                 Address = freelancer.Address,
                 Country = freelancer.Country,
-                DateOfBirth = freelancer.DateOfBirth.ToString("MM/dd/yyyy"),
                 CreatedDate = freelancer.CreatedDate.ToString("MM/dd/yyyy"),
             });
         }
@@ -246,7 +244,7 @@ public class AccountsController : BaseController
                             FirstName = "Admin",
                             LastName = "Admin",
                             Phone="99999999999",
-                            DateOfBirth = DateTime.UtcNow,
+
                             IdentityId = IdentityId,
                         };
 
@@ -283,7 +281,6 @@ public class AccountsController : BaseController
                     Email = user.Email,
                     Address = user.Address,
                     Country = user.Country,
-                    DateOfBirth = user.DateOfBirth.ToString("MM/dd/yyyy"),
                     CreatedDate = user.CreatedDate.ToString("MM/dd/yyyy"),
                 });
             }

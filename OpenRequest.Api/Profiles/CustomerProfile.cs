@@ -10,8 +10,12 @@ public class CustomerProfile : Profile
     {
         CreateMap<CustomerRegisrationDto, Customer>()
             .ForMember(
-                dest => dest.DateOfBirth,
-                opt => opt.MapFrom(src => Convert.ToDateTime(src.DateOfBirth))
+                dest => dest.Address,
+                opt => opt.MapFrom(src => src.Address)
+            )
+            .ForMember(
+                dest => dest.Country,
+                opt => opt.MapFrom(src => src.Country)
             );
     }
 }
