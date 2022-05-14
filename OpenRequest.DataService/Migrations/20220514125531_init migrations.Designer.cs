@@ -12,8 +12,8 @@ using OpenRequest.DataService.Data;
 namespace OpenRequest.DataService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20220509053413_Reset database")]
-    partial class Resetdatabase
+    [Migration("20220514125531_init migrations")]
+    partial class initmigrations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -410,9 +410,6 @@ namespace OpenRequest.DataService.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("DateOfBirth")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Discriminator")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -439,7 +436,6 @@ namespace OpenRequest.DataService.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("Rated")

@@ -13,18 +13,15 @@ public class FreelancerRegistrationDto
     [Required]
     public string Email { get; set; } = null!;
 
-    [Required]
-    public string Phone { get; set; } = null!;
+
+    public string? Phone { get; set; }
 
     [Required]
     public string Password { get; set; } = null!;
 
-    [Required]
-    public string Address { get; set; } = null!;
 
-    [Required]
-    public string Country { get; set; } = null!;
+    public string? Address { get; set; } 
 
-    [Required]
-    public string DateOfBirth { get; set; } = null!;
+    public string? Country { get; set; }
+
 }

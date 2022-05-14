@@ -76,7 +76,6 @@ public class UsersRepository : GenericRepository<User>, IUsersRepository
         user.FirstName = updateUserInfoDto.FirstName;
         user.LastName = updateUserInfoDto.LastName;
         user.Phone = updateUserInfoDto.LastName;
-        user.DateOfBirth = Convert.ToDateTime(updateUserInfoDto.DateOfBirth);
         user.Address = updateUserInfoDto.Address;
         user.Country = updateUserInfoDto.Country;
         return true;

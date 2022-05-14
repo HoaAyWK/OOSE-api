@@ -11,10 +11,9 @@ public class User
     public string FirstName { get; set; } = null!;
     public string LastName { get; set; } = null!;
     public string Email { get; set; } = null!;
-    public string Phone { get; set; } = null!;
+    public string? Phone { get; set; } = null!;
     public string? FeaturedAvatar { get; set; }
     public string? FeaturedBackground { get; set; }
-    public DateTime DateOfBirth { get; set; }
     public string? Country { get; set; }
     public string? Address { get; set; }
     public double Rated { get; set; } = 0.0;

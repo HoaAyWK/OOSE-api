@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace OpenRequest.DataService.Migrations
 {
-    public partial class Resetdatabase : Migration
+    public partial class initmigrations : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -74,10 +74,9 @@ namespace OpenRequest.DataService.Migrations
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FeaturedAvatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FeaturedBackground = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Rated = table.Column<double>(type: "float", nullable: false),
