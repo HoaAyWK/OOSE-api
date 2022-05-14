@@ -13,7 +13,6 @@ var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var jwtConfig = builder.Configuration.GetSection("JwtConfig");
 var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtConfig:Secret"]);
 var adminEmail = builder.Configuration["Admin:Email"];
@@ -67,7 +66,7 @@ else
 
 builder.Services.AddDbContext<AppDbContext>(options => 
 {
-    options.UseNpgsql(connectionString);
+    options.UseNpgsql(defaultConnectionString);
 });
 
 var serviceProvider = builder.Services.BuildServiceProvider();
