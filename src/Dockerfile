@@ -5,14 +5,15 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ./OpenRequest.Api ./OpenRequest.Api
+COPY ["OpenRequest.Api/OpenRequest.Api.csproj", "OpenRequest.Api/"]
+RUN dotnet restore "OpenRequest.Api/OpenRequest.Api.csproj"
 COPY . .
 
 WORKDIR /src/OpenRequest.Api
-RUN dotnet build -c Release -o /app
+RUN dotnet build "OpenRequest.Api.csproj" -c Release -o /app/build
 
 FROM build as publish
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish "OpenRequest.Api.csproj" -c Release -o /app/publish
 
 FROM base as final
 WORKDIR /app
