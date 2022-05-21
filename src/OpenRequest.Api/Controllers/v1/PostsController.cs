@@ -29,7 +29,7 @@ public class PostsController : BaseController
         result.Content = posts.ToList();
         result.ResultCount = posts.Count();
 
-        return Ok(posts);
+        return Ok(result);
     }
 
     [HttpGet]
