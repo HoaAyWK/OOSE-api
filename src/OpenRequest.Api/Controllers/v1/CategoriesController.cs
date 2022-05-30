@@ -83,7 +83,8 @@ public class CategoriesController : BaseController
             {
                 await _unitOfWork.CompleteAsync();
                 result.Content = categoryDto;
-                return Created("GetCategory", new { id = mappedCategory.Id });
+                var categoryFDB = await _unitOfWork.Categories.GetById(mappedCategory.Id);
+                return Ok(categoryFDB);
             }
 
             result.Error = PopulateError(400, 

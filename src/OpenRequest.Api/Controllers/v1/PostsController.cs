@@ -309,7 +309,8 @@ public class PostsController : BaseController
             await _unitOfWork.CompleteAsync();
     
             result.Content = postRequestDto;
-            return CreatedAtRoute("GetPost", new { id = mappedPost.Id });
+            var postFDB = await _unitOfWork.Posts.GetById(mappedPost.Id);
+            return Ok(postFDB);
         }
         else 
         {
