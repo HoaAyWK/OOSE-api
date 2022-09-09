@@ -10,7 +10,7 @@ public interface IPostService
     Task<Result<IEnumerable<PostResponse>>> GetOwnerPostsAsync(string token, int status = 1);
     Task<Result<PostDetailResponse>> GetPostByIdAsync(Guid id);
     Task<Result<PostFullDetailResponse>> GetProcessingOrClosedPostAsync(string token, Guid id);
-    Task<Result<string>> CreateAsync(string token, PostRequest request);
+    Task<Result<PostResponse>> CreateAsync(string token, PostRequest request);
     Task<Result<string>> UpdateAsync(string token, Guid id, PostRequest request);
     Task<Result<string>> DeleteAsync(string token, Guid id);
     Task<Result<string>> SelectAsync(string token, Guid id);

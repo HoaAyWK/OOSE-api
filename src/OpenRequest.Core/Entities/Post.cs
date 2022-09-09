@@ -23,7 +23,7 @@ public class Post
 
     public Guid AuthorId { get; set; }
 
-    public Customer Author { get; set; } = null!;
+    public User? Author { get; set; } 
 
     public Assignment? Assignment { get; set; }
 
@@ -37,5 +37,5 @@ public class Post
     // Freelancer that owner's post choise
     public Guid? FreelancerId { get; set; }
     
-    public Freelancer? Freelancer { get; set; }
+     public User? Freelancer { get; set; }
 }

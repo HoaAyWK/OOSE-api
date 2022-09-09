@@ -14,7 +14,12 @@ public class User
     public string? Phone { get; set; } = null!;
     public string? FeaturedAvatar { get; set; }
     public string? FeaturedBackground { get; set; }
-    public string? Country { get; set; }
-    public string? Address { get; set; }
+     public string? Address { get; set; }
+    public string? JobTitle { get; set; }
+    public string? CompanyName { get; set; }
     public double Rated { get; set; } = 0.0;
+
+    public ICollection<Post>? Posts { get; set; }
+    public ICollection<Post>? AssignedPosts { get; set; }
+    public ICollection<FreelancerRequest>? FreelancerRequests { get; set; }
 }

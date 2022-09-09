@@ -12,7 +12,7 @@ using OpenRequest.Infrastructure.Data;
 namespace OpenRequest.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20220909121037_Init migration")]
+    [Migration("20220909152917_Init migration")]
     partial class Initmigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -400,15 +400,11 @@ namespace OpenRequest.Infrastructure.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Country")
+                    b.Property<string>("CompanyName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -426,6 +422,9 @@ namespace OpenRequest.Infrastructure.Migrations
 
                     b.Property<Guid>("IdentityId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("JobTitle")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -446,22 +445,6 @@ namespace OpenRequest.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-
-                    b.HasDiscriminator<string>("Discriminator").HasValue("User");
-                });
-
-            modelBuilder.Entity("OpenRequest.Core.Entities.Customer", b =>
-                {
-                    b.HasBaseType("OpenRequest.Core.Entities.User");
-
-                    b.HasDiscriminator().HasValue("Customer");
-                });
-
-            modelBuilder.Entity("OpenRequest.Core.Entities.Freelancer", b =>
-                {
-                    b.HasBaseType("OpenRequest.Core.Entities.User");
-
-                    b.HasDiscriminator().HasValue("Freelancer");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -528,7 +511,7 @@ namespace OpenRequest.Infrastructure.Migrations
 
             modelBuilder.Entity("OpenRequest.Core.Entities.FreelancerRequest", b =>
                 {
-                    b.HasOne("OpenRequest.Core.Entities.Freelancer", "Freelancer")
+                    b.HasOne("OpenRequest.Core.Entities.User", "Freelancer")
                         .WithMany("FreelancerRequests")
                         .HasForeignKey("FreelancerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -547,16 +530,15 @@ namespace OpenRequest.Infrastructure.Migrations
 
             modelBuilder.Entity("OpenRequest.Core.Entities.Post", b =>
                 {
-                    b.HasOne("OpenRequest.Core.Entities.Customer", "Author")
+                    b.HasOne("OpenRequest.Core.Entities.User", "Author")
                         .WithMany("Posts")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("OpenRequest.Core.Entities.Freelancer", "Freelancer")
-                        .WithMany("Posts")
-                        .HasForeignKey("FreelancerId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                    b.HasOne("OpenRequest.Core.Entities.User", "Freelancer")
+                        .WithMany("AssignedPosts")
+                        .HasForeignKey("FreelancerId");
 
                     b.Navigation("Author");
 
@@ -607,13 +589,10 @@ namespace OpenRequest.Infrastructure.Migrations
                     b.Navigation("PostCategories");
                 });
 
-            modelBuilder.Entity("OpenRequest.Core.Entities.Customer", b =>
+            modelBuilder.Entity("OpenRequest.Core.Entities.User", b =>
                 {
-                    b.Navigation("Posts");
-                });
+                    b.Navigation("AssignedPosts");
 
-            modelBuilder.Entity("OpenRequest.Core.Entities.Freelancer", b =>
-                {
                     b.Navigation("FreelancerRequests");
 
                     b.Navigation("Posts");

@@ -71,7 +71,6 @@ public class UsersRepository : GenericRepository<User>, IUsersRepository
         user.LastName = userToUpdate.LastName;
         user.Phone = userToUpdate.LastName;
         user.Address = userToUpdate.Address;
-        user.Country = userToUpdate.Country;
 
         return true;
     }

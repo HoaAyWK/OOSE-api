@@ -16,10 +16,11 @@ public class MappingProfile : Profile
         CreateMap<CustomerRegisterRequest, User>();
         CreateMap<FreelancerRegisterRequest, User>();  
         CreateMap<AdminRegisterRequest, User>();
-        CreateMap<User, AuthorResponse>();
-        CreateMap<User, FreelancerResponse>();
         CreateMap<User, UserResponseDto>();
         CreateMap<UpdateUserInfoDto, User>();
+
+        CreateMap<User, AuthorResponse>();
+        CreateMap<User, FreelancerResponse>();
 
         // Posts
         CreateMap<Post, PostResponse>();

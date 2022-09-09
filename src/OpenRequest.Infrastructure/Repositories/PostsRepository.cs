@@ -13,13 +13,19 @@ public class PostsRepository : GenericRepository<Post>, IPostsRepository
 
     }
 
+    public async Task<Post> Create(Post post)
+    {
+        var resutl = await dbSet.AddAsync(post);
+
+        return resutl.Entity;
+    }
+
     public async Task<IEnumerable<Post>> GetPosts(int? status = 1)
     {
         return await dbSet.Where(p => p.Status == status)
             .Include(p => p.PostCategories)
                 .ThenInclude(pc => pc.Category)
             .Include(p => p.Author)
-            .OrderByDescending(p => p.CreatedDate)
             .AsNoTracking()
             .ToListAsync();
     }

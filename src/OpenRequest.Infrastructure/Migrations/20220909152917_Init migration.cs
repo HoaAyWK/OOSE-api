@@ -77,10 +77,10 @@ namespace OpenRequest.Infrastructure.Migrations
                     Phone = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FeaturedAvatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FeaturedBackground = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Rated = table.Column<double>(type: "float", nullable: false),
-                    Discriminator = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    JobTitle = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Rated = table.Column<double>(type: "float", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -221,8 +221,7 @@ namespace OpenRequest.Infrastructure.Migrations
                         name: "FK_Posts_Users_FreelancerId",
                         column: x => x.FreelancerId,
                         principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(

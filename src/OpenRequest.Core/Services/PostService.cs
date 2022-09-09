@@ -26,6 +26,7 @@ public class PostService : IPostService
         var result = new Result<IEnumerable<PostResponse>>();
         var posts = await _unitOfWork.Posts.GetPosts(status);
         var mappedPosts = _mapper.Map<IEnumerable<Post>, IEnumerable<PostResponse>>(posts);
+        
         result.Content = mappedPosts;
         return result;
     }
@@ -130,9 +131,9 @@ public class PostService : IPostService
         return result;
     }
 
-    public async Task<Result<string>> CreateAsync(string token, PostRequest request)
+    public async Task<Result<PostResponse>> CreateAsync(string token, PostRequest request)
     {
-        var result = new Result<string>();
+        var result = new Result<PostResponse>();
         var userId = _tokenService.GetUserId(token);
         var currentUser = await _unitOfWork.Users.GetById(new Guid(userId));
 
@@ -150,8 +151,8 @@ public class PostService : IPostService
         var mappedPost = _mapper.Map<Post>(request);
         mappedPost.AuthorId = currentUser.Id;
         
-        var created = await _unitOfWork.Posts.Add(mappedPost);
-        if (created)
+        var created = await _unitOfWork.Posts.Create(mappedPost);
+        if (created != null)
         {
             foreach (var category in request.Categories)
             {
@@ -163,7 +164,10 @@ public class PostService : IPostService
                 await _unitOfWork.PostCategory.Add(postCategory);
             }
             await _unitOfWork.CompleteAsync();
-            result.Content = "Created post.";
+            
+            var postAdded =_mapper.Map<PostResponse>(created);
+            result.Content = postAdded;
+
             return result;
         }
 

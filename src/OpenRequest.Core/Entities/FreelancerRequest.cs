@@ -4,7 +4,7 @@ public class FreelancerRequest
 {
     public Guid FreelancerId { get; set; }
 
-    public Freelancer? Freelancer { get; set; }
+    public User? Freelancer { get; set; }
 
     public Guid PostId { get; set; }
     
