@@ -1,156 +1,80 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using OpenRequest.Authentication.Models.DTO.Incoming;
-using OpenRequest.Configuration.Messages;
-using OpenRequest.DataService.IConfiguration;
-using OpenRequest.Entities.DbSets;
-using OpenRequest.Entities.DTO.Generic;
-
+using OpenRequest.Core.Dtos.Categories;
+using OpenRequest.Core.Interfaces.Services;
 namespace OpenRequest.Api.Controllers.v1;
-
 
 public class CategoriesController : BaseController
 {
-    public CategoriesController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, IMapper mapper)
-        : base(unitOfWork, userManager, mapper)
+    private readonly ICategoryService _categoryService;
+    public CategoriesController(ICategoryService categoryService) : base()
     {
+        _categoryService = categoryService;
     }
 
     [HttpGet]
-    [Route("Categories")]
-    public async Task<IActionResult> GetCategories()
+    [Route("get-all")]
+    public async Task<IActionResult> GetAllAsync()
     {
-        var categories = await _unitOfWork.Categories.All();
-        var result = new PagedResult<Category>();
-        result.Content = categories.ToList();
-        result.ResultCount = categories.Count();
-
+        var result = await _categoryService.GetAllAsync();
         return Ok(result);
     }
 
     [HttpGet]
-    [Route("Category", Name = "GetCategory")]
-    public async Task<IActionResult> GetCategory(Guid id)
+    [Route("get")]
+    public async Task<IActionResult> GetCategoryAsync(Guid id)
     {
-        var category = await _unitOfWork.Categories.GetById(id);
-        var result = new Result<Category>();
-
-        if (category == null)
+        var result = await _categoryService.GetByIdAsync(id);
+        if (result.Content == null)
         {
-            result.Error = PopulateError(404, 
-                ErrorMessages.Type.NotFound, 
-                ErrorMessages.Category.NotFound);
-            return NotFound(result);
-        }
-
-        result.Content = category;
-        return Ok(result);
-    }
-
-    [HttpGet]
-    [Route("GetCategoryById")]
-    public async Task<IActionResult> GetCategoryById(Guid id)
-    {
-        var result = new Result<Category>();
-
-        var category = await _unitOfWork.Categories.GetCategoryById(id);
-        if (category == null) 
-        {
-            result.Error = PopulateError(404,
-                ErrorMessages.Type.NotFound,
-                ErrorMessages.Category.NotFound);
             return BadRequest(result);
-        }
-
-        result.Content = category;
+        }   
         return Ok(result);
     }
 
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost]
-    [Route("AddCategory")]
-    public async Task<IActionResult> AddCategory([FromBody] CategoryDto categoryDto)
-    {     
-        var result = new Result<CategoryDto>();
-        if (ModelState.IsValid)
+    [Route("add")]
+    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> AddAsync([FromBody] CategoryRequest request)
+    {
+        var result = await _categoryService.AddAsync(request);
+        if (result.IsSuccess)
         {
-            var mappedCategory = _mapper.Map<Category>(categoryDto);
-            var isAdded = await _unitOfWork.Categories.Add(mappedCategory);
-            if (isAdded)
-            {
-                await _unitOfWork.CompleteAsync();
-                result.Content = categoryDto;
-                return Created("GetCategory", new { id = mappedCategory.Id });
-            }
+            return Ok(result);
+        }
 
-            result.Error = PopulateError(400, 
-                ErrorMessages.Type.BadRequest, 
-                ErrorMessages.Generic.InvalidPayload);
-            return BadRequest(result);
-        }
-        else 
-        {
-            result.Error = PopulateError(400, 
-                ErrorMessages.Type.BadRequest, 
-                ErrorMessages.Generic.InvalidPayload);
-            return BadRequest(result);
-        }
+        return BadRequest(result);
     }
 
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPut]
-    [Route("UpdateCategory")]
-    public async Task<IActionResult> UpdateCategory(Guid id, [FromBody] CategoryDto categoryDto)
+    [Route("update")]
+    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] CategoryRequest request)
     {
-        var result = new Result<CategoryDto>();
-        if (ModelState.IsValid)
+        var result = await _categoryService.UpdateAsync(id, request);
+        if (result.IsSuccess)
         {
-            var mappedCategory = _mapper.Map<Category>(categoryDto);
-            var isUpdated = await _unitOfWork.Categories.Upsert(id, mappedCategory);
+            return Ok(result);
+        }
 
-            if (isUpdated)
-            {
-                await _unitOfWork.CompleteAsync();
-                result.Content = categoryDto;
-                return CreatedAtAction("GetCategory", new { id = id, 
-                    name = categoryDto.Name, description = categoryDto.Description });
-            }
-            
-            result.Error = PopulateError(400, 
-                ErrorMessages.Type.BadRequest, 
-                ErrorMessages.Generic.InvalidPayload);
-            return BadRequest(result);
-        }
-        else
-        {
-            result.Error = PopulateError(400, 
-                ErrorMessages.Type.BadRequest, 
-                ErrorMessages.Generic.InvalidPayload);
-            return BadRequest(result);
-        }
+        return BadRequest(result);
     }
 
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpDelete]
-    [Route("DeleteCategory")]
-    public async Task<IActionResult> DeleteCategory(Guid id)
+    [Route("delete")]
+    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> DeleteAsync(Guid id)
     {
-        var result = new Result<string>();
-
-        var isDeleted = await _unitOfWork.Categories.Delete(id);
-        if (!isDeleted)
+        var result = await _categoryService.DeleteAsync(id);
+        if (result.IsSuccess)
         {
-            result.Error = PopulateError(400, 
-                ErrorMessages.Type.BadRequest, 
-                ErrorMessages.Generic.InvalidPayload);
-            return BadRequest(result);
+            return Ok(result);
         }
 
-        await _unitOfWork.CompleteAsync();
-        result.Content = ActionMessages.DeleteSuccess;
-        return Ok(result);
+        return BadRequest(result);
     }
 }

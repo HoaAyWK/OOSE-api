@@ -1,156 +1,114 @@
-using AutoMapper;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using OpenRequest.Configuration.Messages;
-using OpenRequest.DataService.IConfiguration;
-using OpenRequest.Entities.DbSets;
-using OpenRequest.Entities.DbSets.Incoming;
-using OpenRequest.Entities.DTO.Generic;
-using OpenRequest.Entities.DTO.Outgoing;
+using OpenRequest.Core.Dtos.Users;
+using OpenRequest.Core.Interfaces.Services;
 
 namespace OpenRequest.Api.Controllers.v1;
 
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class UsersController : BaseController
 {
-    private readonly RoleManager<IdentityRole> _roleManager;
-    public UsersController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, IMapper mapper) 
-        : base(unitOfWork, userManager, mapper)
+    private readonly IUserService _userService;
+    public UsersController(IUserService userService) : base()
     {
+        _userService = userService;
     }
 
     [HttpGet]
-    [Route("GetLoggedInUserInfo")]
-    public async Task<IActionResult> GetLoggedInUserInfo() {
-        var result = new Result<UserResponseDto>();
-        var loggedInUser = await _userManger.GetUserAsync(HttpContext.User);
-        if (loggedInUser == null) 
-        {
-            result.Error = PopulateError(404,
-                ErrorMessages.Type.NotFound,
-                ErrorMessages.Users.NotFound);
-            return NotFound(result);
-        }
-        var roles = await _userManger.GetRolesAsync(loggedInUser);
-        var identityId = new Guid(loggedInUser.Id);
-        var user = await _unitOfWork.Users.GetByIdentityId(identityId);
-        if (user == null) 
-        {
-            result.Error = PopulateError(404,
-                ErrorMessages.Type.NotFound,
-                ErrorMessages.Users.NotFound);
-            return NotFound(result);
-        }
+    [Route("get-current-user")]
+    public async Task<IActionResult> GetCurrentUserAsync() {
+        var token = await HttpContext.GetTokenAsync("access_token");
+        if (token == null)
+            return BadRequest();
 
-        var mappedUser = _mapper.Map<UserResponseDto>(user);
-        mappedUser.Roles = roles.ToList();
-        
-        result.Content = mappedUser;
-        return Ok(result);
-    }
+        var result = await _userService.GetUserInfoAsync(token);
 
-    [HttpGet]
-    [Route("GetAll")]
-    public async Task<IActionResult> GetAllUsers()
-    {
-        var result = new Result<List<User>>();
-        var users = await _unitOfWork.Users.All();
-        result.Content = users.ToList();
-        return Ok(result);
-    }
-
-    [HttpGet]
-    [Route("GetUser")]
-    public async Task<IActionResult> GetUser(Guid id)
-    {
-        var result = new Result<User>();
-        var user = await _unitOfWork.Users.GetById(id);
-        if (user == null)
-        {
-            result.Error = PopulateError(404,
-                ErrorMessages.Type.NotFound,
-                ErrorMessages.Users.NotFound);
-            return NotFound(result);
-        }
-        result.Content = user;
-        return Ok(result);
-    }
-
-    [HttpPut]
-    [Route("UpdateAvatar")]
-    public async Task<IActionResult> UpdateAvatar([FromBody] UserAvatarDto userAvatarDto)
-    {
-        var result = new Result<string>();
-        var userId = new Guid(userAvatarDto.UserId);
-        var updateAvatar= await _unitOfWork.Users.UpdateAvatar(userId, userAvatarDto.FilePath);
-        if (updateAvatar) 
-        {
-            await _unitOfWork.CompleteAsync();
-            result.Content = "Updated User Avatar";
-            return Ok(result);
-        }
-        
-        result.Error = PopulateError(400,
-            ErrorMessages.Type.BadRequest,
-            ErrorMessages.Users.UnableToProcess
-        );
-        return BadRequest(result);
-    }
-
-    [HttpPut]
-    [Route("UpdateBackground")]
-    public async Task<IActionResult> UpdateBackground([FromBody] UserAvatarDto userAvatarDto)
-    {
-        var result = new Result<string>();
-        var userId = new Guid(userAvatarDto.UserId);
-        var updateAvatar= await _unitOfWork.Users.UpdateBackground(userId, userAvatarDto.FilePath);
-        if (updateAvatar) 
-        {
-            await _unitOfWork.CompleteAsync();
-            result.Content = "Updated User Background";
-            return Ok(result);
-        }
-        
-        result.Error = PopulateError(400,
-            ErrorMessages.Type.BadRequest,
-            ErrorMessages.Users.UnableToProcess
-        );
-        return BadRequest(result);
-    }
-
-    [HttpPut]
-    [Route("UpdateUserInfo")]
-    public async Task<IActionResult> UpdateUserInfo(Guid id, [FromBody] UpdateUserInfoDto updateUserInfoDto)
-    {
-        var result = new Result<UserResponseDto>();
-        if (ModelState.IsValid)
-        {
-            var updated = await _unitOfWork.Users.UpdateUserInfo(id, updateUserInfoDto);
-            if (updated) 
-            {
-                await _unitOfWork.CompleteAsync();
-                var user = await _unitOfWork.Users.GetById(id);
-                var mappedUser = _mapper.Map<UserResponseDto>(user);
-                result.Content = mappedUser;
-                return Ok(result);
-            }
-
-            result.Error = PopulateError(400,
-                ErrorMessages.Type.BadRequest,
-                ErrorMessages.Users.UnableToProcess
-            );
+        if (!result.IsSuccess)
             return BadRequest(result);
-        }
-        else 
-        {
-            result.Error = PopulateError(400,
-                ErrorMessages.Type.BadRequest,
-                ErrorMessages.Users.UnableToProcess
-            );
+        
+        return Ok(result);
+    }
+
+    [HttpGet]
+    [Route("get-all")]
+    public async Task<IActionResult> GetAllUsersAsync()
+    {
+        var token = await HttpContext.GetTokenAsync("access_token");
+        if (token == null)
+            return BadRequest();
+
+        var result = await _userService.GetAllUsersAsync(token);
+
+        if (!result.IsSuccess)
             return BadRequest(result);
-        }
+        
+        return Ok(result);
+    }
+
+    [HttpGet]
+    [Route("get-user")]
+    public async Task<IActionResult> GetUserAsync(Guid id)
+    {
+        var token = await HttpContext.GetTokenAsync("access_token");
+        if (token == null)
+            return BadRequest();
+
+        var result = await _userService.GetUserByIdAsync(token, id);
+
+        if (!result.IsSuccess)
+            return BadRequest(result);
+        
+        return Ok(result);
+    }
+
+    [HttpPut]
+    [Route("update-avatar")]
+    public async Task<IActionResult> UpdateAvatarAsync([FromBody] UserAvatarDto userAvatarDto)
+    {
+        var token = await HttpContext.GetTokenAsync("access_token");
+        if (token == null)
+            return BadRequest();
+
+        var result = await _userService.UpdateAvatarAsync(token, userAvatarDto);
+
+        if (!result.IsSuccess)
+            return BadRequest(result);
+        
+        return Ok(result);
+    }
+
+    [HttpPut]
+    [Route("update-background")]
+    public async Task<IActionResult> UpdateBackgroundAsync([FromBody] UserBackgroundDto userBackgroundDto)
+    {
+        var token = await HttpContext.GetTokenAsync("access_token");
+        if (token == null)
+            return BadRequest();
+
+        var result = await _userService.UpdateBackgroundAsync(token, userBackgroundDto);
+
+        if (!result.IsSuccess)
+            return BadRequest(result);
+        
+        return Ok(result);
+    }
+
+    [HttpPut]
+    [Route("update-user-info")]
+    public async Task<IActionResult> UpdateUserInfoAsync(Guid id, [FromBody] UpdateUserInfoDto updateUserInfoDto)
+    {
+        var token = await HttpContext.GetTokenAsync("access_token");
+        if (token == null)
+            return BadRequest();
+
+        var result = await _userService.UpdateUserInforAsyncAsync(token, updateUserInfoDto);
+
+        if (!result.IsSuccess)
+            return BadRequest(result);
+        
+        return Ok(result);
     }
 }
 

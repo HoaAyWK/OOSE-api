@@ -2,12 +2,10 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.NewtonsoftJson ;
-using Microsoft.EntityFrameworkCore;
-using OpenRequest.DataService.Data;
-using OpenRequest.DataService.IConfiguration;
-using OpenRequest.Authentication.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using OpenRequest.Core.Configurations;
+using OpenRequest.Api.Configurations;
+using OpenRequest.Infrastructure.Data;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -37,60 +35,21 @@ var tokenValidationParameters = new TokenValidationParameters
 };
 
 builder.Services.Configure<JwtConfig>(jwtConfig);
-// Add services to the container.
-// builder.Services.AddDbContext<AppDbContext>(options => 
-//     options.UseSqlServer(connectionString));
 
-var defaultConnectionString = string.Empty;
+builder.Services.AddInFrastructureServices(builder.Configuration, builder.Environment);
 
-if (builder.Environment.EnvironmentName == "Development") {
-    defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-}
-else
-{
-    // Use connection string provided at runtime by Heroku.
-    var connectionUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+builder.Services.AddCoreServices(builder.Configuration);
 
-    connectionUrl = connectionUrl.Replace("postgres://", string.Empty);
-    var userPassSide = connectionUrl.Split("@")[0];
-    var hostSide = connectionUrl.Split("@")[1];
+builder.Services.AddApiServices(builder.Configuration);
 
-    var user = userPassSide.Split(":")[0];
-    var password = userPassSide.Split(":")[1];
-    var host = hostSide.Split("/")[0];
-    var database = hostSide.Split("/")[1].Split("?")[0];
-
-    defaultConnectionString = $"Host={host};Database={database};Username={user};Password={password};SSL Mode=Require;Trust Server Certificate=true";
-}
-
-
-builder.Services.AddDbContext<AppDbContext>(options => 
-{
-    options.UseNpgsql(defaultConnectionString);
-});
-
-var serviceProvider = builder.Services.BuildServiceProvider();
-try
-{
-    var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
-}
-catch
-{
-}
-
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton(tokenValidationParameters);
+
 builder.Services.AddApiVersioning(options => 
 {
     options.ReportApiVersions = true;
     options.AssumeDefaultVersionWhenUnspecified = true;
     options.DefaultApiVersion = ApiVersion.Default;
 });
-
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddDefaultTokenProviders()
-    .AddEntityFrameworkStores<AppDbContext>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -104,7 +63,6 @@ builder.Services.AddAuthentication(options =>
     jwt.TokenValidationParameters = tokenValidationParameters;
 });
 
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
@@ -125,12 +83,26 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 await CreateRoles(app);
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var scopedProvider = scope.ServiceProvider;
+    try
+    {
+        var catalogContext = scopedProvider.GetRequiredService<AppDbContext>();
+        await AppDbContextSeed.SeedAsync(catalogContext, app.Logger);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "An error occurred seeding the DB.");
+    }
 }
+
+// Configure the HTTP request pipeline.
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 
 app.UseHttpsRedirection();
 
